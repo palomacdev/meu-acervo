@@ -105,4 +105,4 @@ li button {
 /* Botão de Deletar (vermelho) */
 li button:last-child {
   background-color: #c94444;
-}
+}cd frontend && npx tailwindcss init -p
