@@ -1,92 +1,81 @@
-// frontend/src/App.js
+// frontend/src/App.js (Versão Final com todas as funções)
 
 import React, { useState, useEffect } from 'react';
-import MediaForm from './components/MediaForm';
-import MediaList from './components/MediaList';
 import './App.css';
+import MediaList from './components/MediaList';
+import MediaForm from './components/MediaForm';
 
 const API_URL = "https://super-duper-space-acorn-gv5jw6vq9p6cp45x-8000.app.github.dev";
 
 function App() {
-  const [midias, setMidias] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [items, setItems] = useState([]);
 
-  // Busca todas as mídias quando o componente carrega
   useEffect(() => {
-    fetchMidias();
+    fetch(`${API_URL}/midias`)
+      .then(response => response.json())
+      .then(data => setItems(data))
+      .catch(error => console.error("Erro ao buscar mídias:", error));
   }, []);
 
-  const fetchMidias = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await fetch(`${API_URL}/midias`);
-      
-      if (!response.ok) {
-        throw new Error(`Erro HTTP: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      setMidias(data);
-      console.log('Mídias carregadas:', data);
-    } catch (err) {
-      console.error('Erro ao buscar mídias:', err);
-      setError('Não foi possível carregar o acervo. Verifique se o backend está rodando.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Função chamada quando um novo item é adicionado
   const handleNewItem = (newItem) => {
-    setMidias([...midias, newItem]);
+    setItems(currentItems => [...currentItems, newItem]);
   };
 
-  // Função para deletar um item
-  const handleDelete = async (id) => {
-    if (!window.confirm('Tem certeza que deseja deletar este item?')) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`${API_URL}/midias/${id}`, {
-        method: 'DELETE'
-      });
-
-      if (!response.ok) {
-        throw new Error('Erro ao deletar');
-      }
-
-      setMidias(midias.filter(media => media.id !== id));
-      console.log('Item deletado com sucesso');
-    } catch (err) {
-      console.error('Erro ao deletar:', err);
-      alert('Erro ao deletar o item');
-    }
+  const handleDeleteItem = (idToDelete) => {
+    fetch(`${API_URL}/midias/${idToDelete}`, { method: 'DELETE' })
+    .then(response => {
+      if (response.ok) {
+        setItems(currentItems => currentItems.filter(item => item.id !== idToDelete));
+      } else { console.error("Falha ao deletar o item."); }
+    })
+    .catch(error => console.error("Erro ao deletar item:", error));
   };
+
+  // --- NOVA FUNÇÃO PARA ATUALIZAR ---
+  const handleUpdateItem = (idToUpdate, currentItem) => {
+    // Determina o novo status
+    const newStatus = currentItem.status === 'Quero Ver/Ler' ? 'Já Vi/Li' : 'Quero Ver/Ler';
+    
+    // Cria o corpo da requisição com os dados para atualizar
+    const updatePayload = {
+      title: currentItem.title,
+      media_type: currentItem.media_type,
+      status: newStatus,
+      rating: currentItem.rating // Mantém a nota atual por enquanto
+    };
+
+    fetch(`${API_URL}/midias/${idToUpdate}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatePayload),
+    })
+    .then(response => response.json())
+    .then(updatedItemFromServer => {
+      // Atualiza a lista no frontend com o item que a API retornou
+      setItems(currentItems => 
+        currentItems.map(item => 
+          item.id === idToUpdate ? updatedItemFromServer : item
+        )
+      );
+    })
+    .catch(error => console.error("Erro ao atualizar item:", error));
+  };
+  // --- FIM DA NOVA FUNÇÃO ---
 
   return (
     <div className="App">
       <header className="App-header">
-        <h1>📚 Meu Acervo</h1>
-        <p>Gerencie seus livros, filmes e séries</p>
+        <h1>Meu Acervo Pessoal</h1>
       </header>
-
-      <main className="App-main">
-        {error && (
-          <div className="error-message">
-            ⚠️ {error}
-          </div>
-        )}
-
+      <main>
         <MediaForm onNewItem={handleNewItem} />
-
-        {loading ? (
-          <p className="loading">Carregando acervo...</p>
-        ) : (
-          <MediaList midias={midias} onDelete={handleDelete} />
-        )}
+        <hr />
+        {/* nova função de atualizar para o MediaList */}
+        <MediaList 
+          items={items} 
+          onDeleteItem={handleDeleteItem}
+          onUpdateItem={handleUpdateItem} 
+        />
       </main>
     </div>
   );
