@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-// URL base da API - ajuste conforme necessário
+// URL base da API 
 const API_URL = 'https://super-duper-space-acorn-gv5jw6vq9p6cp45x-8000.app.github.dev';
 
 const api = axios.create({
