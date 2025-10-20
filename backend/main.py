@@ -1,4 +1,4 @@
-# main.py
+# backend/main.py
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -8,6 +8,7 @@ from database import engine, Base, get_db
 import models
 import schemas
 import crud
+
 
 # Criar as tabelas no banco de dados
 Base.metadata.create_all(bind=engine)
@@ -55,13 +56,13 @@ def criar_midia(midia: schemas.MidiaCreate, db: Session = Depends(get_db)):
     """
     return crud.criar_midia(db=db, midia=midia)
 
-@app.get("/midias", response_model=List[schemas.MidiaResponse])
-def listar_midias(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+@app.get("/midias", response_model=schemas.ListaMidiasPaginada) 
+def listar_midias(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)): # <-- Limit padrão para 10
     """
-    Listar todas as mídias do acervo
-    
+    Listar todas as mídias do acervo com suporte a paginação.
+
     - **skip**: Número de registros para pular (paginação)
-    - **limit**: Número máximo de registros a retornar
+    - **limit**: Número máximo de registros a retornar (padrão 10)
     """
     return crud.listar_midias(db=db, skip=skip, limit=limit)
 

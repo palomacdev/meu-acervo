@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 from models import Midia
 from schemas import MidiaCreate, MidiaUpdate
 from typing import List, Optional
+from sqlalchemy.orm import Session
+
 
 def criar_midia(db: Session, midia: MidiaCreate) -> Midia:
     """Criar uma nova mídia no banco de dados"""
@@ -59,3 +61,22 @@ def buscar_midias_por_status(db: Session, status: str) -> List[Midia]:
     """Buscar mídias por status (Quero Ver/Ler, Já Vi/Li)"""
     return db.query(Midia).filter(Midia.status == status).all()
 
+def listar_midias(db: Session, skip = 0, limit: int = 100):
+    """
+    Lista as mídias aplicando skip e limit, e retorna o total de itens."""
+    #1. Obter o total de registros (COUNT)
+    total_midias = db.query(models.Midia).count()
+
+    #2. Obter a lista de midias paginada
+    midias = (
+        db.query(models.Midia)
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+    # Retornar os dados e o total
+    return {
+        "total": total_midias,
+        "midias": midias
+    }

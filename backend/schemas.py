@@ -1,7 +1,7 @@
-# schemas.py 
+# backend/schemas.py 
 
 from pydantic import BaseModel, Field, validator
-from typing import Optional
+from typing import Optional, List
 from models import TipoMidia, StatusMidia
 
 class MidiaBase(BaseModel):
@@ -43,3 +43,10 @@ class MidiaResponse(MidiaBase):
     class Config:
         from_attributes = True  # Permite criar a partir de modelos SQLAlchemy
 
+class ListaMidiasPaginada(BaseModel):
+    """
+    Schema de resposta para a listagem paginada de mídias.
+    Contém a lista de itens e o total para o frontend calcular as páginas
+    """
+    total: int # o número total de mídias no banco (sem considerar filtro)
+    midias: List[MidiaResponse]
