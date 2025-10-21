@@ -50,3 +50,13 @@ class ListaMidiasPaginada(BaseModel):
     """
     total: int # o número total de mídias no banco (sem considerar filtro)
     midias: List[MidiaResponse]
+
+class SearchResult(BaseModel):
+    """
+    Schema para um único resultado de busca de uma API externa.
+    """
+    id_externo: str
+    titulo: str
+    ano: Optional[str] = None
+    tipo: str # "Filme", "Série" ou "Livro"
+    poster_url: Optional[str] = None

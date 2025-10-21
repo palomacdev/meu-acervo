@@ -8,6 +8,7 @@ from database import engine, Base, get_db
 import models
 import schemas
 import crud
+import external_apis
 
 
 # Criar as tabelas no banco de dados
@@ -122,3 +123,26 @@ def buscar_por_status(status_midia: models.StatusMidia, db: Session = Depends(ge
     Buscar mídias por status (Quero Ver/Ler ou Já Vi/Li)
     """
     return crud.buscar_midias_por_status(db=db, status=status_midia)
+
+# ==================== ENDPOINT DE BUSCA EXTERNA ====================
+
+@app.get("/search", response_model=List[schemas.SearchResult])
+async def search_external(query: str, tipo: models.TipoMidia):
+    """
+    Busca mídias em APIs externas (TMDb para filmes/séries, Google Books para livros).
+    
+    - **query**: Termo de busca (ex: "Harry Potter")
+    - **tipo**: Tipo de mídia a ser buscado (Livro, Filme ou Série)
+    """
+    if not query or len(query) < 3:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="A busca precisa ter no mínimo 3 caracteres."
+        )
+
+    if tipo == models.TipoMidia.LIVRO:
+        return await external_apis.search_google_books(query)
+    elif tipo in [models.TipoMidia.FILME, models.TipoMidia.SERIE]:
+        return await external_apis.search_tmdb(query)
+    
+    return []
